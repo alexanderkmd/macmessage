@@ -1,8 +1,6 @@
 package macmessage
 
 import (
-	"os"
-	"path"
 	"testing"
 
 	log "github.com/sirupsen/logrus"
@@ -13,10 +11,12 @@ import (
 // Connects to Users database.
 // Needs proper security settings to connect.
 func init() {
-	dirname, _ := os.UserHomeDir()
-	ChatDdPath := path.Join(dirname, "Library/Messages/chat.db")
-	ConnectDatabase(ChatDdPath)
-	log.Warn(ChatDdPath)
+	ml := NewMessagesLoader()
+	err := ml.ConnectDatabase()
+
+	if err != nil {
+		log.Error(err)
+	}
 }
 
 func TestDBConnetcion(t *testing.T) {
@@ -65,24 +65,28 @@ func TestBasicChatHandleJoinSelect(t *testing.T) {
 	log.Debugf("%+v", chj)
 }
 
-func TestGetChatByDisplayName(t *testing.T) {
+func TestGetHandlesByDisplayName(t *testing.T) {
 	var err error
 	var handle Handle
 	err = DB.Last(&handle).Error
 	require.Nil(t, err)
 
-	var chat Chat
+	ml := NewMessagesLoader()
+
+	var handles []Handle
 	// At first - test record not found
-	chat, err = GetChatByDisplayName("zzzzzZZZZZzzzzzzzZZZZZZzzzzzz")
+	handles, err = ml.GetHandlesByKey("zzzzzZZZZZzzzzzzzZZZZZZzzzzzz")
 	assert.NotNil(t, err)
-	assert.Equal(t, 0, chat.ROWID)
-	log.Debugf("%+v", chat)
+	log.Error(err)
+	assert.Equal(t, 0, len(handles))
+	log.Debugf("%+v", handles)
 
 	// Test - something already in base
-	chat, err = GetChatByDisplayName(handle.Uncanonicalized_id)
+	handles, err = ml.GetHandlesByKey(handle.Uncanonicalized_id)
 	assert.Nil(t, err)
-	assert.NotEqual(t, 0, chat.ROWID)
-	log.Debugf("%+v", chat)
+	assert.NotEqual(t, 0, handles[0].ChatHandleJoin.Chat_id)
+	assert.NotEqual(t, 0, handles[0].ChatId())
+	log.Debugf("%+v", handles[0])
 }
 
 func TestGetMessagesByDisplayName(t *testing.T) {
@@ -91,8 +95,22 @@ func TestGetMessagesByDisplayName(t *testing.T) {
 	err = DB.Last(&handle).Error
 	require.Nil(t, err)
 
-	messages, err := GetMessagesByDisplayName(handle.Uncanonicalized_id)
+	ml := NewMessagesLoader()
+	messages, err := ml.GetMessagesByDisplayName(handle.Uncanonicalized_id)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, messages[0].ROWID)
 	log.Debugf("%+v", messages)
+}
+
+func TestGetChatByDisplayName(t *testing.T) {
+	var err error
+	var handle Handle
+	err = DB.Last(&handle).Error
+	require.Nil(t, err)
+
+	ml := NewMessagesLoader()
+	chats, err := ml.GetChatsByDisplayName(handle.Uncanonicalized_id)
+	assert.Nil(t, err)
+	assert.NotEqual(t, 0, chats[0].ROWID)
+	log.Debugf("%+v", chats)
 }

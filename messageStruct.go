@@ -11,7 +11,7 @@ type Tabler interface {
 }
 
 type Chat struct {
-	ROWID                          int    `gorm:"column:ROWID"` // INTEGER PRIMARY KEY AUTOINCREMENT,
+	ROWID                          int    `gorm:"column:ROWID;primaryKey"` // INTEGER PRIMARY KEY AUTOINCREMENT,
 	Guid                           string // TEXT UNIQUE NOT NULL,
 	Style                          int    //INTEGER,
 	State                          int    // INTEGER,
@@ -46,7 +46,7 @@ func (Chat) TableName() string {
 }
 
 type Message struct {
-	ROWID                             int    `gorm:"column:ROWID"` // INTEGER PRIMARY KEY AUTOINCREMENT,
+	ROWID                             int    `gorm:"column:ROWID;primaryKey"` // INTEGER PRIMARY KEY AUTOINCREMENT,
 	Guid                              string // TEXT UNIQUE NOT NULL,
 	Text                              string // TEXT,
 	Replace                           bool   // INTEGER DEFAULT 0,
@@ -137,16 +137,22 @@ func (ChatMessageJoin) TableName() string {
 }
 
 type Handle struct {
-	ROWID              int    `gorm:"column:ROWID"` //  INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
-	Id                 string //TEXT NOT NULL,
-	Country            string // TEXT,
-	Service            string // TEXT NOT NULL,
-	Uncanonicalized_id string // TEXT,
-	Person_centric_id  string //TEXT DEFAULT NULL
+	ROWID              int            `gorm:"column:ROWID;primaryKey"` //  INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE,
+	Id                 string         // TEXT NOT NULL,
+	Country            string         // TEXT,
+	Service            string         // TEXT NOT NULL,
+	Uncanonicalized_id string         // TEXT,
+	Person_centric_id  string         // TEXT DEFAULT NULL
+	ChatHandleJoin     ChatHandleJoin `gorm:"foreignKey:Handle_id"`
 }
 
 func (Handle) TableName() string {
 	return "handle"
+}
+
+// Returns chat_id for the specified handle
+func (h Handle) ChatId() int {
+	return h.ChatHandleJoin.Chat_id
 }
 
 type ChatHandleJoin struct {
