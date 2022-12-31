@@ -96,7 +96,15 @@ func TestGetMessagesByDisplayName(t *testing.T) {
 	require.Nil(t, err)
 
 	ml := NewMessagesLoader()
-	messages, err := ml.GetMessagesByDisplayName(handle.Uncanonicalized_id)
+
+	// At first - test record not found
+	messages, err := ml.GetMessagesByDisplayName("zzzzzZZZZZzzzzzzzZZZZZZzzzzzz")
+	assert.NotNil(t, err)
+	log.Error(err)
+	assert.Equal(t, 0, len(messages))
+	log.Debugf("%+v", messages)
+
+	messages, err = ml.GetMessagesByDisplayName(handle.Uncanonicalized_id)
 	assert.Nil(t, err)
 	assert.NotEqual(t, 0, messages[0].ROWID)
 	log.Debugf("%+v", messages)

@@ -164,12 +164,6 @@ func (ml MessagesLoader) GetMessagesByChatIds(chatIds []int) ([]Message, error) 
 	err = tmp.Find(&messages).Error
 
 	if err != nil {
-		log.Error(err)
-	}
-
-	log.Info(len(messages))
-	if err != nil {
-		log.Error(err)
 		return messages, err
 	}
 	return messages, err
